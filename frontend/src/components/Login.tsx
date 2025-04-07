@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Box, TextField, Button, Typography, Paper } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
@@ -8,6 +9,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,6 +20,7 @@ const Login = () => {
       });
       login(response.data.token, response.data.user);
       toast.success('Login successful!');
+      navigate('/dashboard');
     } catch (error) {
       toast.error('Login failed. Please check your credentials.');
     }

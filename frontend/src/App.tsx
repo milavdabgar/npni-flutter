@@ -49,6 +49,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<PrivateRoute><RoleBasedRoute /></PrivateRoute>} />
+            <Route path="/dashboard" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
