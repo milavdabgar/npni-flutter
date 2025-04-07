@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import {
   Box,
   Container,
@@ -44,16 +45,37 @@ export default function AdminDashboard() {
   const [tabValue, setTabValue] = useState(0);
   const [projects] = useState<Project[]>([]);
 
-  const handleImportCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportCSV = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       const formData = new FormData();
       formData.append('file', file);
       try {
-        // TODO: Implement CSV import
-        console.log('Importing CSV...');
-      } catch (error) {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        const response = await fetch('http://localhost:9000/api/projects/import', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Import failed');
+        }
+
+        const result = await response.json();
+        toast.success(result.message);
+        // Refresh the projects list
+        // TODO: Add fetchProjects() function to refresh the list
+      } catch (error: any) {
         console.error('Error importing CSV:', error);
+        toast.error(error.message || 'Failed to import CSV file');
       }
     }
   };

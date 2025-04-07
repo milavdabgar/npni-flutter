@@ -18,6 +18,7 @@ import {
   Slider,
   Container
 } from '@mui/material';
+import Header from '../common/Header';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { Project, Evaluation } from '../../types';
@@ -123,7 +124,9 @@ export default function JuryDashboard() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Box>
+      <Header />
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Paper sx={{ p: 2 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Typography variant="h4">
@@ -221,5 +224,6 @@ export default function JuryDashboard() {
         </Dialog>
       </Paper>
     </Container>
+    </Box>
   );
 }

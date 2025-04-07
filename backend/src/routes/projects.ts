@@ -47,51 +47,78 @@ router.post('/', authenticateAdmin, async (req: CustomRequest, res: Response) =>
 });
 
 // Import projects from CSV (admin only)
-router.post('/import', authenticateAdmin, async (req: CustomRequest, res: Response) => {
+router.post('/import', authenticateAdmin, async (req: Request, res: Response) => {
   try {
+    console.log('Starting CSV import...');
     const files = req.files as { [key: string]: UploadedFile };
     if (!files || !files.file) {
+      console.log('No file found in request');
       return res.status(400).json({ message: 'No file uploaded' });
     }
+    console.log('File received:', files.file.name);
 
     const file = files.file;
-    const parser = parse({ columns: true });
+    const csvContent = file.data.toString('utf8');
+    console.log('CSV content first 100 chars:', csvContent.substring(0, 100));
+    const records = await new Promise<any[]>((resolve, reject) => {
+      const results: any[] = [];
+      parse(csvContent, {
+        columns: true,
+        skip_empty_lines: true,
+        trim: true
+      })
+      .on('data', (data) => {
+        results.push(data);
+      })
+      .on('error', (error) => {
+        reject(error);
+      })
+      .on('end', () => {
+        resolve(results);
+      });
+    });
 
-    const projects: IProject[] = [];
+    const projects = records.map((record, index) => {
+      // Filter out empty team member fields and 'Na' values
+      const teamMembers = [
+        record['First Team Member Name  (For Certificate Printing)'],
+        record['Second Team Member Name  (For Certificate Printing)'],
+        record['Third Team Member Name  (For Certificate Printing)'],
+        record['Forth Team Member Name  (For Certificate Printing)'],
+        record['Fifth Team Member Name  (For Certificate Printing)']
+      ].filter(member => member && member.toLowerCase() !== 'na' && member.trim() !== '');
+
+      const projectData = {
+        teamId: `NPNI-${String(index + 1).padStart(3, '0')}`,
+        title: record['Project Title'] || '',
+        description: record['Write about your Idea/project '] || '',
+        presentationType: record['Demo Model  / Poster '] || '',
+        institution: record['School / college'] || '',
+        semester: record['Select Semester'] || '',
+        branch: record['Select Branch '] || '',
+        teamMembers,
+        mentorName: record['Faculty Mentor Name'] || '',
+        contactNumber: record['Mobile number any one team member'] || '',
+        evaluations: []
+      };
+
+      // Log the project data before creation
+      console.log('Creating project:', projectData);
+
+      return new Project(projectData);
+    });
+
+    console.log('Parsed projects:', projects.length);
+    if (projects.length === 0) {
+      throw new Error('No projects parsed from CSV');
+    }
     
-    parser.on('readable', async () => {
-      let record: any;
-      while ((record = parser.read())) {
-        const project = new Project({
-          teamId: record.teamId,
-          title: record.title,
-          description: record.description,
-          presentationType: record.presentationType,
-          institution: record.institution,
-          semester: record.semester,
-          branch: record.branch,
-          teamMembers: record.teamMembers.split(',').map((m: string) => m.trim()),
-          mentorName: record.mentorName,
-          contactNumber: record.contactNumber,
-          location: record.location
-        });
-        projects.push(project);
-      }
-    });
-
-    parser.on('end', async () => {
-      try {
-        await Project.insertMany(projects);
-        res.json({ message: `Successfully imported ${projects.length} projects` });
-      } catch (error) {
-        res.status(500).json({ message: 'Error importing projects' });
-      }
-    });
-
-    parser.write(file.data);
-    parser.end();
-  } catch (error) {
-    res.status(500).json({ message: 'Error processing file' });
+    console.log('Sample project:', JSON.stringify(projects[0], null, 2));
+    await Project.insertMany(projects);
+    res.json({ message: `Successfully imported ${projects.length} projects` });
+  } catch (error: any) {
+    console.error('CSV import error:', error);
+    res.status(500).json({ message: error.message || 'Error processing file' });
   }
 });
 

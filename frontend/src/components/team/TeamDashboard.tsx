@@ -12,6 +12,7 @@ import {
   ListItemText,
   Divider
 } from '@mui/material';
+import Header from '../common/Header';
 import { Project } from '../../types';
 
 export default function TeamDashboard() {
@@ -29,18 +30,23 @@ export default function TeamDashboard() {
 
   if (!project) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Paper sx={{ p: 2 }}>
-          <Typography>Loading project details...</Typography>
-        </Paper>
-      </Container>
+      <Box>
+        <Header />
+        <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+          <Paper sx={{ p: 2 }}>
+            <Typography>Loading project details...</Typography>
+          </Paper>
+        </Container>
+      </Box>
     );
   }
 
   const hasWon = project.evaluations.some(e => e.marks >= 80); // Example threshold
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Box>
+      <Header />
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Box sx={{ display: 'grid', gap: 3 }}>
         {/* Project Details */}
         <Box sx={{ gridColumn: 'span 12' }}>
@@ -139,5 +145,6 @@ export default function TeamDashboard() {
         </Box>
       </Box>
     </Container>
+    </Box>
   );
 }

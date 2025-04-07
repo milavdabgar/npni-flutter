@@ -4,17 +4,18 @@ import { IProject } from '../types';
 const projectSchema = new mongoose.Schema<IProject>({
   teamId: { type: String, required: true, unique: true },
   title: { type: String, required: true },
-  description: { type: String, required: true },
-  presentationType: { type: String, required: true },
-  institution: { type: String, required: true },
-  semester: { type: String, required: true },
-  branch: { type: String, required: true },
+  description: { type: String },
+  presentationType: { type: String },
+  institution: { type: String },
+  semester: { type: String },
+  branch: { type: String },
   teamMembers: [{ type: String }],
-  mentorName: { type: String, required: true },
-  contactNumber: { type: String, required: true },
+  mentorName: { type: String },
+  contactNumber: { type: String },
   evaluations: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Evaluation'
+    ref: 'Evaluation',
+    default: []
   }]
 }, { timestamps: true });
 
