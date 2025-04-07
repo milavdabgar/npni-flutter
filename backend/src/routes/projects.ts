@@ -9,15 +9,29 @@ import bcrypt from 'bcryptjs';
 
 const router = express.Router();
 
-// Get all projects
+// Get all projects or team-specific project
 router.get('/', authenticateUser, async (req: CustomRequest, res: Response) => {
   try {
+    // If user is a team member, only return their project
+    if (req.user?.role === 'team') {
+      const project = await Project.findOne({ teamId: req.user.email })
+        .populate('evaluations.juryId', 'name');
+      
+      if (!project) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+      
+      return res.json([project]); // Return as array for frontend compatibility
+    }
+
+    // For admin/jury, return all projects
     const projects = await Project.find()
       .select('teamId title branch location evaluations')
       .populate('evaluations.juryId', 'name')
       .sort('teamId');
     res.json(projects);
   } catch (error) {
+    console.error('Error fetching projects:', error);
     res.status(500).json({ message: 'Error fetching projects' });
   }
 });

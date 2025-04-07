@@ -16,11 +16,43 @@ import Header from '../common/Header';
 import { Project } from '../../types';
 
 export default function TeamDashboard() {
-  const [project] = useState<Project | null>(null);
+  const [project, setProject] = useState<Project | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // TODO: Fetch team's project details
-    console.log('Fetching project details...');
+    const fetchProject = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setError('Authentication token not found');
+          return;
+        }
+
+        const response = await fetch('http://localhost:9000/api/projects', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch project');
+        }
+
+        const data = await response.json();
+        if (data && data.length > 0) {
+          setProject(data[0]); // Team users only get their own project
+        } else {
+          setError('No project found');
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProject();
   }, []);
 
   const handleDownloadCertificate = (type: 'participation' | 'winner') => {
@@ -28,13 +60,26 @@ export default function TeamDashboard() {
     console.log(`Downloading ${type} certificate...`);
   };
 
-  if (!project) {
+  if (loading) {
     return (
       <Box>
         <Header />
         <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
           <Paper sx={{ p: 2 }}>
             <Typography>Loading project details...</Typography>
+          </Paper>
+        </Container>
+      </Box>
+    );
+  }
+
+  if (error || !project) {
+    return (
+      <Box>
+        <Header />
+        <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+          <Paper sx={{ p: 2 }}>
+            <Typography color="error">{error || 'Project not found'}</Typography>
           </Paper>
         </Container>
       </Box>
