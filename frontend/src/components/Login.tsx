@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Box, TextField, Button, Typography, Paper } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../utils/axios';
 import toast from 'react-hot-toast';
 
 const Login = () => {
@@ -14,7 +14,7 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:9000/api/auth/login', {
+      const response = await api.post('/auth/login', {
         email,
         password,
       });
