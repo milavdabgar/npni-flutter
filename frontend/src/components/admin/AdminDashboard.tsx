@@ -14,6 +14,7 @@ import {
   Tab,
   Tabs
 } from '@mui/material';
+import Header from '../common/Header';
 import { Project } from '../../types';
 
 interface TabPanelProps {
@@ -62,7 +63,9 @@ export default function AdminDashboard() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Box>
+      <Header />
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Paper sx={{ p: 2 }}>
         <Typography variant="h4" gutterBottom>
           Admin Dashboard
@@ -129,5 +132,6 @@ export default function AdminDashboard() {
         </TabPanel>
       </Paper>
     </Container>
+    </Box>
   );
 }
