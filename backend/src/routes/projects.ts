@@ -203,4 +203,30 @@ router.delete('/:id', authenticateAdmin, async (req: CustomRequest, res: Respons
   }
 });
 
+// Assign location to project (admin only)
+router.patch('/:id/location', authenticateAdmin, async (req: CustomRequest, res: Response) => {
+  try {
+    const { location } = req.body;
+    
+    if (!location) {
+      return res.status(400).json({ message: 'Location is required' });
+    }
+
+    const project = await Project.findByIdAndUpdate(
+      req.params.id,
+      { $set: { location } },
+      { new: true }
+    );
+    
+    if (!project) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+    
+    res.json(project);
+  } catch (error) {
+    console.error('Error assigning location:', error);
+    res.status(500).json({ message: 'Error assigning location to project' });
+  }
+});
+
 export default router;

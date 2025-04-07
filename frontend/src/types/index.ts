@@ -6,6 +6,7 @@ export interface User {
 }
 
 export interface Project {
+  _id: string;
   teamId: string;
   title: string;
   description?: string;

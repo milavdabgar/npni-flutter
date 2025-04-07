@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { IProject } from '../types';
 
-const projectSchema = new mongoose.Schema<IProject>({
+const projectSchema = new mongoose.Schema({
   teamId: { type: String, required: true, unique: true },
   title: { type: String, required: true },
   description: { type: String },
@@ -12,6 +12,7 @@ const projectSchema = new mongoose.Schema<IProject>({
   teamMembers: [{ type: String }],
   mentorName: { type: String },
   contactNumber: { type: String },
+  location: { type: String },
   evaluations: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Evaluation',
