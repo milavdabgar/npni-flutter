@@ -10,16 +10,32 @@ const router: Router = Router();
 // Login route
 router.post('/login', async (req: Request, res: Response) => {
   try {
+    console.log('Login attempt:', req.body);
     const { email, password } = req.body;
 
-    // Find user by email
-    const user = await User.findOne({ email });
+    // Validate input
+    if (!email || !password) {
+      console.log('Missing email or password');
+      return res.status(400).json({ message: 'Please provide email and password' });
+    }
+
+    // Convert email to lowercase for case-insensitive comparison
+    const normalizedEmail = email.toLowerCase();
+    console.log('Normalized email:', normalizedEmail);
+
+    // Try finding user with both original and lowercase email
+    let user = await User.findOne({ email }) || await User.findOne({ email: normalizedEmail });
+    console.log('Found user:', user ? 'yes' : 'no');
+    
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     // Check password
+    console.log('Checking password...');
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log('Password match:', isMatch ? 'yes' : 'no');
+    
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }

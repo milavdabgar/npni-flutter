@@ -1,9 +1,11 @@
 import express, { Request, Response } from 'express';
 import Project from '../models/Project';
+import User from '../models/User';
 import { authenticateAdmin, authenticateUser } from '../middleware/auth';
 import { parse } from 'csv-parse';
 import { UploadedFile } from 'express-fileupload';
 import type { IProject, CustomRequest } from '../types/index';
+import bcrypt from 'bcryptjs';
 
 const router = express.Router();
 
@@ -115,7 +117,37 @@ router.post('/import', authenticateAdmin, async (req: Request, res: Response) =>
     }
     
     console.log('Sample project:', JSON.stringify(projects[0], null, 2));
+    
+    // Create team users with teamId as email and contact number as password
+    const teamUsers = projects.map(project => ({
+      email: project.teamId, // NPNI-001 etc.
+      password: bcrypt.hashSync(project.contactNumber, 10), // Using contact number as password
+      role: 'team',
+      name: project.teamMembers[0] || 'Team Leader'
+    }));
+
+    // First clear existing projects and team users
+    await Project.deleteMany({});
+    await User.deleteMany({ role: 'team' });
+    console.log('Cleared existing projects and team users');
+
+    // Create team users first
+    let createdCount = 0;
+    for (const user of teamUsers) {
+      try {
+        await User.create(user);
+        console.log(`Created team user: ${user.email} with password: ${user.password}`);
+        createdCount++;
+      } catch (error: any) {
+        console.error(`Error creating team user ${user.email}:`, error);
+        throw error;
+      }
+    }
+    console.log(`Created ${createdCount} team accounts`);
+
+    // Then create projects
     await Project.insertMany(projects);
+    console.log(`Created ${projects.length} projects`);
     res.json({ message: `Successfully imported ${projects.length} projects` });
   } catch (error: any) {
     console.error('CSV import error:', error);
