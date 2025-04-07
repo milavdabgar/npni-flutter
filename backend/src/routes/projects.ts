@@ -11,6 +11,7 @@ const router = express.Router();
 router.get('/', authenticateUser, async (req: CustomRequest, res: Response) => {
   try {
     const projects = await Project.find()
+      .select('teamId title branch location evaluations')
       .populate('evaluations.juryId', 'name')
       .sort('teamId');
     res.json(projects);

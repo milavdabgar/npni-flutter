@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import {
   Box,
@@ -43,7 +43,36 @@ function TabPanel(props: TabPanelProps) {
 
 export default function AdminDashboard() {
   const [tabValue, setTabValue] = useState(0);
-  const [projects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+
+  const fetchProjects = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch('http://localhost:9000/api/projects', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch projects');
+      }
+
+      const data = await response.json();
+      setProjects(data);
+    } catch (error: any) {
+      console.error('Error fetching projects:', error);
+      toast.error(error.message || 'Failed to fetch projects');
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
 
   const handleImportCSV = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -72,7 +101,7 @@ export default function AdminDashboard() {
         const result = await response.json();
         toast.success(result.message);
         // Refresh the projects list
-        // TODO: Add fetchProjects() function to refresh the list
+        await fetchProjects();
       } catch (error: any) {
         console.error('Error importing CSV:', error);
         toast.error(error.message || 'Failed to import CSV file');
