@@ -9,16 +9,22 @@ export interface Project {
   _id: string;
   teamId: string;
   title: string;
+  branch: string;
+  mentorName: string;
+  contactNumber: string;
+  institution: string;
+  semester: string;
+  teamMembers: string[];
+  location?: string;
   description?: string;
   presentationType?: string;
-  institution?: string;
-  semester?: string;
-  branch?: string;
-  teamMembers: string[];
-  mentorName?: string;
-  contactNumber?: string;
-  location?: string;
-  evaluations: Evaluation[];
+  evaluations: Array<{
+    juryId: {
+      name: string;
+      _id: string;
+    };
+    marks: number;
+  }>;
 }
 
 export interface Evaluation {

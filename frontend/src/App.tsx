@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './components/Login';
 import AdminDashboard from './components/admin/AdminDashboard';
+import ProjectDetails from './components/admin/ProjectDetails';
 import JuryDashboard from './components/jury/JuryDashboard';
 import TeamDashboard from './components/team/TeamDashboard';
 import './App.css';
@@ -50,6 +51,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<PrivateRoute><RoleBasedRoute /></PrivateRoute>} />
             <Route path="/dashboard" element={<Navigate to="/" replace />} />
+            <Route path="/project/:id" element={<PrivateRoute><ProjectDetails /></PrivateRoute>} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
