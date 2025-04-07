@@ -12,10 +12,15 @@ export interface IUser extends Document {
 export interface IProject extends Document {
   teamId: string;
   title: string;
+  description: string;
+  presentationType: string;
   institution: string;
-  members: string[];
+  semester: string;
+  branch: string;
+  teamMembers: string[];
+  mentorName: string;
+  contactNumber: string;
   evaluations: string[];
-  round: number;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -1,12 +1,14 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import Project from '../models/Project';
 import { authenticateAdmin, authenticateUser } from '../middleware/auth';
-import csv from 'csv-parse';
+import { parse } from 'csv-parse';
+import { UploadedFile } from 'express-fileupload';
+import type { IProject, CustomRequest } from '../types/index';
 
 const router = express.Router();
 
 // Get all projects
-router.get('/', authenticateUser, async (req, res) => {
+router.get('/', authenticateUser, async (req: CustomRequest, res: Response) => {
   try {
     const projects = await Project.find()
       .populate('evaluations.juryId', 'name')
@@ -18,7 +20,7 @@ router.get('/', authenticateUser, async (req, res) => {
 });
 
 // Get project by ID
-router.get('/:id', authenticateUser, async (req, res) => {
+router.get('/:id', authenticateUser, async (req: CustomRequest, res: Response) => {
   try {
     const project = await Project.findById(req.params.id)
       .populate('evaluations.juryId', 'name');
@@ -34,7 +36,7 @@ router.get('/:id', authenticateUser, async (req, res) => {
 });
 
 // Create new project (admin only)
-router.post('/', authenticateAdmin, async (req, res) => {
+router.post('/', authenticateAdmin, async (req: CustomRequest, res: Response) => {
   try {
     const project = new Project(req.body);
     await project.save();
@@ -45,19 +47,20 @@ router.post('/', authenticateAdmin, async (req, res) => {
 });
 
 // Import projects from CSV (admin only)
-router.post('/import', authenticateAdmin, async (req, res) => {
+router.post('/import', authenticateAdmin, async (req: CustomRequest, res: Response) => {
   try {
-    if (!req.files || !req.files.file) {
+    const files = req.files as { [key: string]: UploadedFile };
+    if (!files || !files.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
-    const file = req.files.file;
-    const parser = csv({ columns: true });
+    const file = files.file;
+    const parser = parse({ columns: true });
 
-    const projects = [];
+    const projects: IProject[] = [];
     
     parser.on('readable', async () => {
-      let record;
+      let record: any;
       while ((record = parser.read())) {
         const project = new Project({
           teamId: record.teamId,
@@ -67,7 +70,7 @@ router.post('/import', authenticateAdmin, async (req, res) => {
           institution: record.institution,
           semester: record.semester,
           branch: record.branch,
-          teamMembers: record.teamMembers.split(',').map(m => m.trim()),
+          teamMembers: record.teamMembers.split(',').map((m: string) => m.trim()),
           mentorName: record.mentorName,
           contactNumber: record.contactNumber,
           location: record.location
@@ -93,7 +96,7 @@ router.post('/import', authenticateAdmin, async (req, res) => {
 });
 
 // Update project (admin only)
-router.patch('/:id', authenticateAdmin, async (req, res) => {
+router.put('/:id', authenticateAdmin, async (req: CustomRequest, res: Response) => {
   try {
     const project = await Project.findByIdAndUpdate(
       req.params.id,
@@ -112,7 +115,7 @@ router.patch('/:id', authenticateAdmin, async (req, res) => {
 });
 
 // Delete project (admin only)
-router.delete('/:id', authenticateAdmin, async (req, res) => {
+router.delete('/:id', authenticateAdmin, async (req: CustomRequest, res: Response) => {
   try {
     const project = await Project.findByIdAndDelete(req.params.id);
     

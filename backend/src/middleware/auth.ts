@@ -1,21 +1,23 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
+import type { CustomRequest, UserDocument } from '../types/index';
 
-interface AuthRequest extends Request {
-  user?: any;
+interface JwtPayload {
+  id: string;
+  role: string;
 }
 
-const authenticateUser = async (req: AuthRequest, res: Response, next: NextFunction) => {
+const authenticateUser = async (req: CustomRequest, res: Response, next: NextFunction) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
     
     if (!token) {
-      throw new Error();
+      return res.status(401).json({ message: 'No token provided' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-    const user = await User.findById(decoded.id);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as JwtPayload;
+    const user = await User.findById(decoded.id) as UserDocument | null;
 
     if (!user) {
       throw new Error();
@@ -28,11 +30,11 @@ const authenticateUser = async (req: AuthRequest, res: Response, next: NextFunct
   }
 };
 
-const authenticateJury = async (req: AuthRequest, res: Response, next: NextFunction) => {
+const authenticateJury = async (req: CustomRequest, res: Response, next: NextFunction) => {
   try {
     await authenticateUser(req, res, () => {
-      if (req.user.role !== 'jury') {
-        return res.status(403).json({ message: 'Access denied. Jury only.' });
+      if (!req.user || req.user.role !== 'jury') {
+        return res.status(403).json({ message: 'Not authorized as jury' });
       }
       next();
     });
@@ -41,11 +43,11 @@ const authenticateJury = async (req: AuthRequest, res: Response, next: NextFunct
   }
 };
 
-const authenticateAdmin = async (req: AuthRequest, res: Response, next: NextFunction) => {
+const authenticateAdmin = async (req: CustomRequest, res: Response, next: NextFunction) => {
   try {
     await authenticateUser(req, res, () => {
-      if (req.user.role !== 'admin') {
-        return res.status(403).json({ message: 'Access denied. Admin only.' });
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Not authorized as admin' });
       }
       next();
     });

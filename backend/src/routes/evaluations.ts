@@ -1,4 +1,5 @@
-import express from 'express';
+import express, { Response } from 'express';
+import type { CustomRequest } from '../types/index';
 import Evaluation from '../models/Evaluation';
 import Project from '../models/Project';
 import { authenticateJury } from '../middleware/auth';
@@ -6,7 +7,7 @@ import { authenticateJury } from '../middleware/auth';
 const router = express.Router();
 
 // Get evaluations for a project
-router.get('/project/:projectId', authenticateJury, async (req, res) => {
+router.get('/project/:projectId', authenticateJury, async (req: CustomRequest, res: Response) => {
   try {
     const evaluations = await Evaluation.find({ projectId: req.params.projectId })
       .populate('juryId', 'name')
@@ -18,8 +19,12 @@ router.get('/project/:projectId', authenticateJury, async (req, res) => {
 });
 
 // Submit a new evaluation
-router.post('/', authenticateJury, async (req, res) => {
+router.post('/', authenticateJury, async (req: CustomRequest, res: Response) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+
     const { projectId, marks, comment, round } = req.body;
 
     // Check if project exists
@@ -31,7 +36,7 @@ router.post('/', authenticateJury, async (req, res) => {
     // Check if jury has already evaluated this project in this round
     const existingEvaluation = await Evaluation.findOne({
       projectId,
-      juryId: req.user.id,
+      juryId: req.user._id,
       round
     });
 
@@ -41,7 +46,7 @@ router.post('/', authenticateJury, async (req, res) => {
 
     const evaluation = new Evaluation({
       projectId,
-      juryId: req.user.id,
+      juryId: req.user._id,
       marks,
       comment,
       round,
@@ -62,8 +67,11 @@ router.post('/', authenticateJury, async (req, res) => {
 });
 
 // Lock an evaluation
-router.patch('/:id/lock', authenticateJury, async (req, res) => {
+router.put('/:id', authenticateJury, async (req: CustomRequest, res: Response) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
     const evaluation = await Evaluation.findById(req.params.id);
     
     if (!evaluation) {

@@ -1,13 +1,14 @@
-import express from 'express';
+import express, { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
 import { authenticateAdmin } from '../middleware/auth';
+import type { IUser, CustomRequest } from '../types/index';
 
-const router = express.Router();
+const router: Router = Router();
 
 // Login route
-router.post('/login', async (req, res) => {
+router.post('/login', async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
@@ -45,7 +46,7 @@ router.post('/login', async (req, res) => {
 });
 
 // Create user (admin only)
-router.post('/register', authenticateAdmin, async (req, res) => {
+router.post('/register', authenticateAdmin, async (req: Request, res: Response) => {
   try {
     const { email, password, name, role } = req.body;
 
@@ -83,9 +84,13 @@ router.post('/register', authenticateAdmin, async (req, res) => {
 });
 
 // Get current user
-router.get('/me', authenticateAdmin, async (req, res) => {
+router.get('/me', authenticateAdmin, async (req: CustomRequest, res: Response) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
+    if (!req.user) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+
+    const user = await User.findById(req.user._id).select('-password');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
