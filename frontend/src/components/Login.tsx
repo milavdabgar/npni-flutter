@@ -18,7 +18,7 @@ const Login = () => {
         email,
         password,
       });
-      login(response.data.token, response.data.user);
+      login(response.data.user, response.data.token);
       toast.success('Login successful!');
       navigate('/dashboard');
     } catch (error) {
